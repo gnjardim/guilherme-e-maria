@@ -76,6 +76,14 @@
   .exp-caption h3 {
     font-family: 'Playfair Display', serif; font-weight: 500; font-size: 21px;
   }
+  .exp-price {
+    margin-top: 6px; font-size: 15px; color: var(--gold); letter-spacing: 0.5px;
+  }
+
+  .gift-amount {
+    font-family: 'Playfair Display', serif; font-size: 30px; color: var(--ink);
+    text-align: center; margin-bottom: 18px;
+  }
 
   /* ---------- modal ---------- */
   .overlay {
@@ -160,11 +168,7 @@
     <div class="pay-section">
       <span class="flag-tag" data-i18n="pixTag"></span>
       <h3>Pix</h3>
-      <label for="pix-amount" data-i18n="amountLabel"></label>
-      <div class="amount-row">
-        <span class="currency">R$</span>
-        <input type="text" id="pix-amount" inputmode="decimal" placeholder="0,00">
-      </div>
+      <div class="gift-amount" id="pix-amount-display"></div>
       <button class="btn" onclick="generatePix()" data-i18n="pixBtn"></button>
       <div id="qr-area">
         <div id="qrcode"></div>
@@ -177,11 +181,7 @@
     <div class="pay-section">
       <span class="flag-tag" data-i18n="venmoTag"></span>
       <h3>Venmo</h3>
-      <label for="venmo-amount" data-i18n="amountLabel"></label>
-      <div class="amount-row">
-        <span class="currency">$</span>
-        <input type="text" id="venmo-amount" inputmode="decimal" placeholder="0.00">
-      </div>
+      <div class="gift-amount" id="venmo-amount-display"></div>
       <a class="btn" href="#" onclick="openVenmo(event)" data-i18n="venmoBtn"></a>
       <p class="hint"><span data-i18n="venmoHandleLabel"></span> <strong id="venmo-handle"></strong></p>
     </div>
@@ -213,19 +213,28 @@ const CONFIG = {
 /* ==================== EXPERIENCES =====================
    Public-domain ukiyo-e prints from Wikimedia Commons.
    Swap any img URL for your own if you prefer. */
+/* Each experience has a FIXED gift amount:
+   brl → charged via Pix (Brazil), usd → charged via Venmo (US).
+   Edit the numbers below to whatever you like. */
 const EXPERIENCES = [
   { img: "https://commons.wikimedia.org/wiki/Special:FilePath/Tsunami_by_hokusai_19th_century.jpg?width=900",
-    emoji: "🌊", pt: "Rumo ao Japão", en: "Off to Japan" },
+    emoji: "🌊", pt: "Voo para Tóquio", en: "Flight to Tokyo",
+    brl: 800, usd: 150 },
   { img: "https://commons.wikimedia.org/wiki/Special:FilePath/Red_Fuji_southern_wind_clear_morning.jpg?width=900",
-    emoji: "🗻", pt: "Ver o Monte Fuji", en: "Seeing Mount Fuji" },
+    emoji: "🗻", pt: "Trem até o Monte Fuji", en: "Train to Mount Fuji",
+    brl: 250, usd: 50 },
   { img: "https://commons.wikimedia.org/wiki/Special:FilePath/Hiroshige_Bowl_of_Sushi.jpg?width=900",
-    emoji: "🍣", pt: "Um jantar em Tóquio", en: "Dinner in Tokyo" },
+    emoji: "🍣", pt: "Jantar de sushi em Tóquio", en: "Sushi dinner in Tokyo",
+    brl: 400, usd: 80 },
   { img: "https://commons.wikimedia.org/wiki/Special:FilePath/100_views_edo_011.jpg?width=900",
-    emoji: "🌸", pt: "Passeio sob as cerejeiras", en: "A walk under the cherry trees" },
+    emoji: "🍵", pt: "Cerimônia do chá em Kyoto", en: "Tea ceremony in Kyoto",
+    brl: 150, usd: 30 },
   { img: "https://commons.wikimedia.org/wiki/Special:FilePath/Hiroshige,_Night_View_of_Saruwaka-machi.jpg?width=900",
-    emoji: "🏮", pt: "Uma noite em Tóquio", en: "A night out in Tokyo" },
+    emoji: "🎭", pt: "Teatro kabuki em Tóquio", en: "Kabuki theater in Tokyo",
+    brl: 300, usd: 60 },
   { img: "https://commons.wikimedia.org/wiki/Special:FilePath/100_views_edo_099.jpg?width=900",
-    emoji: "⛩️", pt: "Visita aos templos", en: "Visiting the temples" }
+    emoji: "⛩️", pt: "Noite em um ryokan com onsen", en: "A night at a ryokan onsen",
+    brl: 600, usd: 120 }
 ];
 
 /* ============================ i18n ============================ */
@@ -233,11 +242,10 @@ const STRINGS = {
   pt: {
     title: "Lua de Mel no Japão",
     pixTag: "Para convidados no Brasil",
-    amountLabel: "Se quiser, defina um valor",
     pixBtn: "Gerar QR Code Pix",
     copyBtn: "Copiar Pix copia e cola",
     copiedMsg: "Copiado!",
-    pixHint: "Pode deixar em branco — o app do seu banco pergunta o restante.",
+    pixHint: "O valor já vem preenchido — é só confirmar no app do seu banco.",
     venmoTag: "Para convidados nos EUA",
     venmoBtn: "Abrir Venmo",
     venmoHandleLabel: "Nosso usuário:",
@@ -246,11 +254,10 @@ const STRINGS = {
   en: {
     title: "Honeymoon in Japan",
     pixTag: "For guests in Brazil",
-    amountLabel: "Set an amount, if you like",
     pixBtn: "Generate Pix QR Code",
     copyBtn: "Copy Pix code",
     copiedMsg: "Copied!",
-    pixHint: "Feel free to leave it blank — your banking app will handle the rest.",
+    pixHint: "The amount is already set — just confirm in your banking app.",
     venmoTag: "For guests in the US",
     venmoBtn: "Open Venmo",
     venmoHandleLabel: "Our handle:",
@@ -276,6 +283,18 @@ function setLang(l) {
   }
 }
 
+/* ==================== amount formatting ==================== */
+function fmtBRL(n) {
+  return "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 0 });
+}
+function fmtUSD(n) {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 0 });
+}
+/* Price shown on each card follows the selected language / currency. */
+function cardPrice(exp) {
+  return lang === "pt" ? fmtBRL(exp.brl) : fmtUSD(exp.usd);
+}
+
 /* ==================== gallery + modal ==================== */
 function renderGrid() {
   const grid = document.getElementById("exp-grid");
@@ -288,17 +307,19 @@ function renderGrid() {
       '<img class="exp-img" src="' + exp.img + '" alt="" loading="lazy" ' +
       'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
       '<div class="exp-fallback">' + exp.emoji + '</div>' +
-      '<div class="exp-caption"><h3>' + exp[lang] + '</h3></div>';
+      '<div class="exp-caption"><h3>' + exp[lang] + '</h3>' +
+      '<div class="exp-price">' + cardPrice(exp) + '</div></div>';
     grid.appendChild(card);
   });
 }
 
 function openModal(i) {
   currentExp = i;
-  document.getElementById("modal-title").textContent = EXPERIENCES[i][lang];
+  const exp = EXPERIENCES[i];
+  document.getElementById("modal-title").textContent = exp[lang];
+  document.getElementById("pix-amount-display").textContent = fmtBRL(exp.brl);
+  document.getElementById("venmo-amount-display").textContent = fmtUSD(exp.usd);
   document.getElementById("qr-area").style.display = "none";
-  document.getElementById("pix-amount").value = "";
-  document.getElementById("venmo-amount").value = "";
   document.getElementById("overlay").classList.add("open");
   document.body.style.overflow = "hidden";
 }
@@ -350,14 +371,6 @@ function buildPixPayload(amount) {
   return p + crc16(p);
 }
 
-function parseAmount(raw) {
-  if (!raw || !raw.trim()) return null;
-  const clean = raw.replace(/[^\d.,]/g, "").replace(/\./g, "").replace(",", ".");
-  const n = parseFloat(clean.includes(".") ? clean : raw.replace(/[^\d.]/g, ""));
-  if (isNaN(n) || n <= 0) return null;
-  return n.toFixed(2);
-}
-
 let currentPayload = "";
 
 function generatePix() {
@@ -367,7 +380,7 @@ function generatePix() {
       : "Set your Pix key in index.html (CONFIG object) before using.");
     return;
   }
-  const amount = parseAmount(document.getElementById("pix-amount").value);
+  const amount = EXPERIENCES[currentExp].brl.toFixed(2);
   currentPayload = buildPixPayload(amount);
   const qrDiv = document.getElementById("qrcode");
   qrDiv.innerHTML = "";
@@ -400,7 +413,7 @@ function openVenmo(e) {
       : "Set your Venmo username in index.html (CONFIG object) before using.");
     return;
   }
-  const amount = parseAmount(document.getElementById("venmo-amount").value);
+  const amount = currentExp !== null ? EXPERIENCES[currentExp].usd.toFixed(2) : null;
   const note = encodeURIComponent("Guilherme & Maria — " +
     (currentExp !== null ? EXPERIENCES[currentExp].en : "Honeymoon"));
   let url = "https://venmo.com/" + encodeURIComponent(CONFIG.venmoUser) + "?txn=pay&note=" + note;

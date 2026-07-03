@@ -47,7 +47,11 @@
     font-family: 'Playfair Display', serif; font-weight: 500;
     font-size: clamp(32px, 5.5vw, 50px); margin-bottom: 14px;
   }
-  .torii { font-size: 30px; margin-top: 22px; letter-spacing: 10px; }
+  .intro {
+    max-width: 600px; margin: 26px auto 0; font-size: 16px; line-height: 1.75;
+    color: #5c574f; white-space: pre-line;
+  }
+  .torii { font-size: 30px; margin-top: 26px; letter-spacing: 10px; }
   main { max-width: 1060px; margin: 0 auto; padding: 32px 20px 80px; }
 
   /* ---------- experience gallery ---------- */
@@ -152,6 +156,7 @@
 <header>
   <div class="names">Guilherme &amp; Maria</div>
   <h1 data-i18n="title"></h1>
+  <p class="intro" data-i18n="intro"></p>
   <div class="torii">⛩️ 🌸 🗻</div>
 </header>
 
@@ -241,6 +246,10 @@ const EXPERIENCES = [
 const STRINGS = {
   pt: {
     title: "Lua de Mel no Japão",
+    intro: "Nosso maior presente é celebrar este momento com vocês!\n\n" +
+           "Se desejarem nos presentear, adoraríamos que fosse para a nossa lua de mel no Japão.\n\n" +
+           "Em vez de presentes tradicionais, qualquer contribuição para essa viagem será recebida com muito carinho e gratidão.\n\n" +
+           "Obrigado por fazerem parte da nossa história e por celebrarem conosco este novo capítulo de nossas vidas!",
     pixTag: "Para convidados no Brasil",
     pixBtn: "Gerar QR Code Pix",
     copyBtn: "Copiar Pix copia e cola",
@@ -253,6 +262,10 @@ const STRINGS = {
   },
   en: {
     title: "Honeymoon in Japan",
+    intro: "Our greatest gift is getting to celebrate this moment with you!\n\n" +
+           "If you'd like to give us something, we'd love it to go toward our honeymoon in Japan.\n\n" +
+           "Instead of traditional gifts, any contribution toward the trip will be received with much love and gratitude.\n\n" +
+           "Thank you for being part of our story and for celebrating this new chapter of our lives with us!",
     pixTag: "For guests in Brazil",
     pixBtn: "Generate Pix QR Code",
     copyBtn: "Copy Pix code",

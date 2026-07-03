@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guilherme &amp; Maria — Lua de Mel no Japão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --cream: #faf7f2;
+    --ink: #2b2b2b;
+    --gold: #b08d57;
+    --soft: #8a8a8a;
+    --card: #ffffff;
+    --sakura: #f5e6e8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+  .lang-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 40;
+    background: var(--card); border: 1px solid #e5ddd0; border-radius: 20px;
+    padding: 4px; display: flex; gap: 2px;
+  }
+  .lang-toggle button {
+    border: none; background: none; font-family: 'Lato', sans-serif;
+    font-size: 13px; padding: 4px 12px; border-radius: 16px; cursor: pointer; color: var(--soft);
+  }
+  .lang-toggle button.active { background: var(--ink); color: #fff; }
+  header {
+    text-align: center; padding: 72px 24px 40px;
+    background: linear-gradient(180deg, var(--sakura) 0%, var(--cream) 100%);
+  }
+  .names {
+    font-family: 'Playfair Display', serif; font-size: 15px;
+    letter-spacing: 6px; text-transform: uppercase; color: var(--soft); margin-bottom: 18px;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif; font-weight: 500;
+    font-size: clamp(32px, 5.5vw, 50px); margin-bottom: 14px;
+  }
+  .torii { font-size: 30px; margin-top: 22px; letter-spacing: 10px; }
+  main { max-width: 1060px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* ---------- experience gallery ---------- */
+  .exp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+  @media (max-width: 900px) { .exp-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .exp-grid { grid-template-columns: 1fr; } }
+  .exp-card {
+    position: relative; border-radius: 14px; overflow: hidden; cursor: pointer;
+    border: 1px solid #eee5d8; background: var(--card);
+    box-shadow: 0 2px 14px rgba(0,0,0,0.05);
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .exp-card:hover { transform: translateY(-4px); box-shadow: 0 10px 26px rgba(0,0,0,0.10); }
+  .exp-img {
+    width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block;
+    background: linear-gradient(135deg, var(--sakura), #efe6d8);
+  }
+  .exp-fallback {
+    width: 100%; aspect-ratio: 1 / 1; display: none;
+    align-items: center; justify-content: center; font-size: 56px;
+    background: linear-gradient(135deg, var(--sakura), #efe6d8);
+  }
+  .exp-caption {
+    padding: 16px 18px 18px; text-align: center;
+  }
+  .exp-caption h3 {
+    font-family: 'Playfair Display', serif; font-weight: 500; font-size: 21px;
+  }
+
+  /* ---------- modal ---------- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(35,30,24,0.55);
+    display: none; align-items: center; justify-content: center; z-index: 50; padding: 18px;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--cream); border-radius: 16px; max-width: 480px; width: 100%;
+    max-height: 92vh; overflow-y: auto; padding: 34px 30px 30px; position: relative;
+  }
+  .modal-close {
+    position: absolute; top: 14px; right: 16px; border: none; background: none;
+    font-size: 22px; color: var(--soft); cursor: pointer; line-height: 1;
+  }
+  .modal h2 {
+    font-family: 'Playfair Display', serif; font-weight: 500; font-size: 26px;
+    text-align: center; margin-bottom: 24px; padding: 0 12px;
+  }
+  .pay-section { background: var(--card); border: 1px solid #eee5d8; border-radius: 12px; padding: 22px 20px; }
+  .pay-section + .pay-section { margin-top: 16px; }
+  .flag-tag {
+    display: inline-block; font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--gold); border: 1px solid var(--gold); border-radius: 14px;
+    padding: 2px 12px; margin-bottom: 12px;
+  }
+  .pay-section h3 { font-family: 'Playfair Display', serif; font-weight: 500; font-size: 21px; margin-bottom: 12px; }
+  label { display: block; font-size: 12.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--soft); margin-bottom: 6px; }
+  .amount-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .amount-row .currency { font-size: 17px; color: var(--soft); }
+  input[type="text"] {
+    width: 100%; padding: 11px 13px; font-size: 16px; font-family: 'Lato', sans-serif;
+    border: 1px solid #ddd3c4; border-radius: 8px; background: #fffdf9; color: var(--ink);
+  }
+  input[type="text"]:focus { outline: none; border-color: var(--gold); }
+  .btn {
+    display: inline-block; width: 100%; text-align: center; cursor: pointer;
+    background: var(--ink); color: #fff; border: none; border-radius: 8px;
+    font-family: 'Lato', sans-serif; font-size: 14px; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 13px 16px; text-decoration: none;
+    transition: background .2s;
+  }
+  .btn:hover { background: #000; }
+  .btn.secondary { background: none; color: var(--ink); border: 1px solid var(--ink); margin-top: 10px; }
+  .hint { font-size: 13px; color: #999; margin-top: 10px; }
+  #qr-area { text-align: center; margin-top: 18px; display: none; }
+  #qrcode { display: inline-block; padding: 12px; background: #fff; border: 1px solid #eee; border-radius: 10px; }
+  #qrcode img, #qrcode canvas { display: block; }
+  .copia-box {
+    margin-top: 12px; background: #f7f3ec; border: 1px dashed #d8cbb5; border-radius: 8px;
+    padding: 9px 11px; font-size: 11px; word-break: break-all; color: #777;
+    max-height: 66px; overflow: auto; text-align: left;
+  }
+  .copied { color: var(--gold) !important; }
+  footer { text-align: center; padding: 30px; font-size: 13px; color: #b5ab9b; }
+  .heart { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="lang-toggle">
+  <button id="btn-pt" onclick="setLang('pt')">PT</button>
+  <button id="btn-en" onclick="setLang('en')">EN</button>
+</div>
+
+<header>
+  <div class="names">Guilherme &amp; Maria</div>
+  <h1 data-i18n="title"></h1>
+  <div class="torii">⛩️ 🌸 🗻</div>
+</header>
+
+<main>
+  <div class="exp-grid" id="exp-grid"></div>
+</main>
+
+<!-- ---------- payment modal ---------- -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+    <h2 id="modal-title"></h2>
+
+    <div class="pay-section">
+      <span class="flag-tag" data-i18n="pixTag"></span>
+      <h3>Pix</h3>
+      <label for="pix-amount" data-i18n="amountLabel"></label>
+      <div class="amount-row">
+        <span class="currency">R$</span>
+        <input type="text" id="pix-amount" inputmode="decimal" placeholder="0,00">
+      </div>
+      <button class="btn" onclick="generatePix()" data-i18n="pixBtn"></button>
+      <div id="qr-area">
+        <div id="qrcode"></div>
+        <div class="copia-box" id="copia-cola"></div>
+        <button class="btn secondary" id="copy-btn" onclick="copyPix()" data-i18n="copyBtn"></button>
+      </div>
+      <p class="hint" data-i18n="pixHint"></p>
+    </div>
+
+    <div class="pay-section">
+      <span class="flag-tag" data-i18n="venmoTag"></span>
+      <h3>Venmo</h3>
+      <label for="venmo-amount" data-i18n="amountLabel"></label>
+      <div class="amount-row">
+        <span class="currency">$</span>
+        <input type="text" id="venmo-amount" inputmode="decimal" placeholder="0.00">
+      </div>
+      <a class="btn" href="#" onclick="openVenmo(event)" data-i18n="venmoBtn"></a>
+      <p class="hint"><span data-i18n="venmoHandleLabel"></span> <strong id="venmo-handle"></strong></p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span data-i18n="footer"></span> <span class="heart">♥</span>
+</footer>
+
+<script>
+/* ================================================================
+   CONFIGURATION — REPLACE THE PLACEHOLDERS BELOW BEFORE PUBLISHING
+   ================================================================ */
+const CONFIG = {
+  // 1) Your Pix key: email, phone (+5521...), CPF, or chave aleatória
+  pixKey: "YOUR_PIX_KEY_HERE",
+
+  // 2) Receiver name as registered for the Pix key (max 25 chars)
+  pixName: "RECEIVER NAME HERE",
+
+  // Receiver city for the Pix payload (max 15 chars)
+  pixCity: "RIO DE JANEIRO",
+
+  // 4) Venmo username WITHOUT the @
+  venmoUser: "YOUR-VENMO-USERNAME"
+};
+
+/* ==================== EXPERIENCES =====================
+   Public-domain ukiyo-e prints from Wikimedia Commons.
+   Swap any img URL for your own if you prefer. */
+const EXPERIENCES = [
+  { img: "https://commons.wikimedia.org/wiki/Special:FilePath/Tsunami_by_hokusai_19th_century.jpg?width=900",
+    emoji: "🌊", pt: "Rumo ao Japão", en: "Off to Japan" },
+  { img: "https://commons.wikimedia.org/wiki/Special:FilePath/Red_Fuji_southern_wind_clear_morning.jpg?width=900",
+    emoji: "🗻", pt: "Ver o Monte Fuji", en: "Seeing Mount Fuji" },
+  { img: "https://commons.wikimedia.org/wiki/Special:FilePath/Hiroshige_Bowl_of_Sushi.jpg?width=900",
+    emoji: "🍣", pt: "Um jantar em Tóquio", en: "Dinner in Tokyo" },
+  { img: "https://commons.wikimedia.org/wiki/Special:FilePath/100_views_edo_011.jpg?width=900",
+    emoji: "🌸", pt: "Passeio sob as cerejeiras", en: "A walk under the cherry trees" },
+  { img: "https://commons.wikimedia.org/wiki/Special:FilePath/Hiroshige,_Night_View_of_Saruwaka-machi.jpg?width=900",
+    emoji: "🏮", pt: "Uma noite em Tóquio", en: "A night out in Tokyo" },
+  { img: "https://commons.wikimedia.org/wiki/Special:FilePath/100_views_edo_099.jpg?width=900",
+    emoji: "⛩️", pt: "Visita aos templos", en: "Visiting the temples" }
+];
+
+/* ============================ i18n ============================ */
+const STRINGS = {
+  pt: {
+    title: "Lua de Mel no Japão",
+    pixTag: "Para convidados no Brasil",
+    amountLabel: "Se quiser, defina um valor",
+    pixBtn: "Gerar QR Code Pix",
+    copyBtn: "Copiar Pix copia e cola",
+    copiedMsg: "Copiado! 💛",
+    pixHint: "Pode deixar em branco — o app do seu banco pergunta o restante.",
+    venmoTag: "Para convidados nos EUA",
+    venmoBtn: "Abrir Venmo",
+    venmoHandleLabel: "Nosso usuário:",
+    footer: "Feito com amor por Guilherme & Maria"
+  },
+  en: {
+    title: "Honeymoon in Japan",
+    pixTag: "For guests in Brazil",
+    amountLabel: "Set an amount, if you like",
+    pixBtn: "Generate Pix QR Code",
+    copyBtn: "Copy Pix code",
+    copiedMsg: "Copied! 💛",
+    pixHint: "Feel free to leave it blank — your banking app will handle the rest.",
+    venmoTag: "For guests in the US",
+    venmoBtn: "Open Venmo",
+    venmoHandleLabel: "Our handle:",
+    footer: "Made with love by Guilherme & Maria"
+  }
+};
+
+let lang = (navigator.language || "pt").toLowerCase().startsWith("en") ? "en" : "pt";
+let currentExp = null;
+
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l === "pt" ? "pt-BR" : "en";
+  document.getElementById("btn-pt").classList.toggle("active", l === "pt");
+  document.getElementById("btn-en").classList.toggle("active", l === "en");
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = STRINGS[l][el.dataset.i18n] || "";
+  });
+  document.getElementById("venmo-handle").textContent = "@" + CONFIG.venmoUser;
+  renderGrid();
+  if (currentExp !== null) {
+    document.getElementById("modal-title").textContent = EXPERIENCES[currentExp][lang];
+  }
+}
+
+/* ==================== gallery + modal ==================== */
+function renderGrid() {
+  const grid = document.getElementById("exp-grid");
+  grid.innerHTML = "";
+  EXPERIENCES.forEach((exp, i) => {
+    const card = document.createElement("div");
+    card.className = "exp-card";
+    card.onclick = () => openModal(i);
+    card.innerHTML =
+      '<img class="exp-img" src="' + exp.img + '" alt="" loading="lazy" ' +
+      'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
+      '<div class="exp-fallback">' + exp.emoji + '</div>' +
+      '<div class="exp-caption"><h3>' + exp[lang] + '</h3></div>';
+    grid.appendChild(card);
+  });
+}
+
+function openModal(i) {
+  currentExp = i;
+  document.getElementById("modal-title").textContent = EXPERIENCES[i][lang];
+  document.getElementById("qr-area").style.display = "none";
+  document.getElementById("pix-amount").value = "";
+  document.getElementById("venmo-amount").value = "";
+  document.getElementById("overlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+  currentExp = null;
+  document.getElementById("overlay").classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("keydown", function(e) { if (e.key === "Escape") closeModal(); });
+
+/* ==================== PIX BR CODE GENERATION ==================== */
+function emv(id, value) {
+  return id + String(value.length).padStart(2, "0") + value;
+}
+
+function crc16(str) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < str.length; i++) {
+    crc ^= str.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      crc = crc & 0x8000 ? ((crc << 1) ^ 0x1021) : (crc << 1);
+      crc &= 0xFFFF;
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, "0");
+}
+
+function asciiUpper(s, max) {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "")
+          .replace(/[^\x20-\x7E]/g, "").toUpperCase().slice(0, max);
+}
+
+function buildPixPayload(amount) {
+  const key = CONFIG.pixKey.trim();
+  const name = asciiUpper(CONFIG.pixName, 25);
+  const city = asciiUpper(CONFIG.pixCity, 15);
+  let p = "000201";
+  p += emv("26", emv("00", "br.gov.bcb.pix") + emv("01", key));
+  p += emv("52", "0000");
+  p += emv("53", "986");
+  if (amount) p += emv("54", amount);
+  p += emv("58", "BR");
+  p += emv("59", name);
+  p += emv("60", city);
+  p += emv("62", emv("05", "***"));
+  p += "6304";
+  return p + crc16(p);
+}
+
+function parseAmount(raw) {
+  if (!raw || !raw.trim()) return null;
+  const clean = raw.replace(/[^\d.,]/g, "").replace(/\./g, "").replace(",", ".");
+  const n = parseFloat(clean.includes(".") ? clean : raw.replace(/[^\d.]/g, ""));
+  if (isNaN(n) || n <= 0) return null;
+  return n.toFixed(2);
+}
+
+let currentPayload = "";
+
+function generatePix() {
+  if (CONFIG.pixKey === "YOUR_PIX_KEY_HERE") {
+    alert(lang === "pt"
+      ? "Configure sua chave Pix no arquivo index.html (objeto CONFIG) antes de usar."
+      : "Set your Pix key in index.html (CONFIG object) before using.");
+    return;
+  }
+  const amount = parseAmount(document.getElementById("pix-amount").value);
+  currentPayload = buildPixPayload(amount);
+  const qrDiv = document.getElementById("qrcode");
+  qrDiv.innerHTML = "";
+  new QRCode(qrDiv, { text: currentPayload, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+  document.getElementById("copia-cola").textContent = currentPayload;
+  document.getElementById("qr-area").style.display = "block";
+  const btn = document.getElementById("copy-btn");
+  btn.textContent = STRINGS[lang].copyBtn;
+  btn.classList.remove("copied");
+}
+
+function copyPix() {
+  navigator.clipboard.writeText(currentPayload).then(function() {
+    const btn = document.getElementById("copy-btn");
+    btn.textContent = STRINGS[lang].copiedMsg;
+    btn.classList.add("copied");
+    setTimeout(function() {
+      btn.textContent = STRINGS[lang].copyBtn;
+      btn.classList.remove("copied");
+    }, 2500);
+  });
+}
+
+/* ========================== VENMO ========================== */
+function openVenmo(e) {
+  e.preventDefault();
+  if (CONFIG.venmoUser === "YOUR-VENMO-USERNAME") {
+    alert(lang === "pt"
+      ? "Configure seu usuário do Venmo no arquivo index.html (objeto CONFIG) antes de usar."
+      : "Set your Venmo username in index.html (CONFIG object) before using.");
+    return;
+  }
+  const amount = parseAmount(document.getElementById("venmo-amount").value);
+  const note = encodeURIComponent("Guilherme & Maria — " +
+    (currentExp !== null ? EXPERIENCES[currentExp].en : "Honeymoon"));
+  let url = "https://venmo.com/" + encodeURIComponent(CONFIG.venmoUser) + "?txn=pay&note=" + note;
+  if (amount) url += "&amount=" + amount;
+  window.open(url, "_blank", "noopener");
+}
+
+setLang(lang);
+</script>
+</body>
+</html>
